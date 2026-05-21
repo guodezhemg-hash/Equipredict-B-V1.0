@@ -1,89 +1,101 @@
- Calculation Core Preview
+ # Equipredict-B:1.0
+This repository provides a compact code preview for the reaction-extent equilibrium calculation described in the associated manuscript.
 
-This repository is a compact preview of the numerical calculation used in a reaction-extent equilibrium model.
+The purpose of this repository is to document the numerical core of the method for review. 
+## Repository Scope
 
-It is intended to show the central mathematical idea only. It is not a complete application, not a data-processing pipeline, and not a ready-to-use solver for a specific chemical system.
+This preview includes only:
 
-## Core Idea
+- the concentration update from reaction extent,
+- the logarithmic reaction quotient calculation,
+- the analytic Jacobian used by nonlinear least-squares optimization,
+- a residual function of the form `logQ - logK`,
+- a tiny artificial least-squares solver example.
 
-For a reaction network with initial concentration vector `C0`, stoichiometric matrix `A`, and reaction extent vector `xi`, the concentration update is:
+It intentionally excludes:
+
+- experimental datasets,
+- real compound names,
+- project-specific coefficient matrices,
+- equilibrium-constant tables,
+- Excel input/output workflows,
+- batch processing scripts,
+- figure/table generation scripts,
+- tuned solver settings used for real manuscript calculations.
+
+## Mathematical Core
+
+For initial concentration vector `C0`, coefficient matrix `V`, and reaction extent vector `xi`, concentrations are updated as:
 
 ```python
-C = C0 + A @ xi
+C = C0 + V @ xi
 ```
 
-The logarithmic reaction quotient is:
+The logarithmic reaction quotient is calculated as:
 
 ```python
-logQ = A.T @ np.log(C)
+logQ = V.T @ np.log(C)
 ```
 
 The analytic Jacobian with respect to `xi` is:
 
 ```python
-J = A.T @ (A / C[:, None])
+J = V.T @ (V / C[:, None])
+```
+
+The least-squares residual is:
+
+```python
+residual = logQ(C0 + V @ xi) - logK
 ```
 
 These expressions are implemented in [calculation_core.py](calculation_core.py).
 
-## Least-Squares Preview
+## Least-Squares Demonstration
 
-The equilibrium problem can be expressed as a nonlinear least-squares objective:
-
-```python
-residual = logQ(C0 + A @ xi) - logK
-```
-
-The preview code exposes this structure through:
+The file includes a small artificial example showing how the residual and Jacobian callbacks can be passed to SciPy:
 
 ```python
-residual_fn, jacobian_fn = make_least_squares_callbacks(C0, A, logK)
+result = least_squares(
+    residual_fn,
+    x0=initial_xi,
+    jac=jacobian_fn,
+)
 ```
 
-Conceptually, these callbacks are the quantities passed to a nonlinear least-squares optimizer:
-
-```python
-# Pseudocode only:
-# result = least_squares(
-#     residual_fn,
-#     x0=initial_xi,
-#     jac=jacobian_fn,
-#     bounds=...,
-# )
-```
-
-The actual optimizer configuration, bounds strategy, convergence handling, data validation, and project-specific preprocessing are intentionally omitted.
-
-## What Is Included
-
-- `concentration_from_extent()`
-- `log_reaction_quotient()`
-- `reaction_extent_jacobian()`
-- `log_equilibrium_residual()`
-- `make_least_squares_callbacks()`
-- A tiny artificial demo using generic species-like arrays
-
-## What Is Not Included
-
-- No Excel reading or writing
-- No batch-processing workflow
-- No real experimental data
-- No real substance names
-- No project-specific reaction matrix
-- No complete least-squares optimization pipeline or tuned solver configuration
-- No production command-line interface
+The demonstration uses generic arrays only. It is provided to verify the calculation structure, not to reproduce the manuscript dataset.
 
 ## Quick Check
+
+Use Python 3.10 or later.
 
 ```bash
 pip install -r requirements.txt
 python calculation_core.py
 ```
 
-The demo uses artificial arrays only and is provided for checking the formulas.
+Expected output includes a successful toy least-squares solve:
 
-## Notes
+```text
+solver success = True
+solver xi = [0.72828584]
+```
 
-This preview is meant for academic or portfolio-style demonstration. If you need a complete implementation, you should build your own data interface, model validation, solver configuration, and result-export workflow around the mathematical core.
+Small numerical differences may occur across Python, NumPy, or SciPy versions.
 
-No license is provided in this preview folder. Unless a license is added later, reuse and redistribution are not granted beyond what the hosting platform requires for viewing the repository.
+## Files
+
+```text
+calculation_core.py   # numerical core and artificial least-squares example
+requirements.txt      # minimal Python dependencies
+CODE_AVAILABILITY.md  # code/data availability statement for manuscript use
+.gitignore            # excludes generated files and private data formats
+```
+
+## Citation
+
+If this repository is referenced during review or after publication, please cite the associated manuscript. The bibliographic details can be added here after acceptance.
+
+## License And Reuse
+
+No open-source license is included in this preview repository. The code is provided for method inspection and academic review. For reuse beyond viewing the repository, please contact the authors.

@@ -1,59 +1,44 @@
- # Equipredict-B:1.0
-This repository provides a compact code preview for the reaction-extent equilibrium calculation described in the associated manuscript.
+# EquiPredict-B Calculation Core
 
-The purpose of this repository is to document the numerical core of the method for review. 
-## Repository Scope
+This repository contains a compact Python implementation of the calculation core used in EquiPredict-B, a chemical reaction network model for estimating equilibrium flavor-compound concentrations in Chinese Baijiu.
 
-This preview includes only:
+The model describes the transition from an initial concentration state to a thermodynamic equilibrium state through a reaction-extent formulation. Given an initial concentration vector, a stoichiometric coefficient matrix, and reaction equilibrium constants, the calculation updates compound concentrations, evaluates reaction quotients, and solves the reaction extents by nonlinear least-squares minimization.
 
-- the concentration update from reaction extent,
-- the logarithmic reaction quotient calculation,
-- the analytic Jacobian used by nonlinear least-squares optimization,
-- a residual function of the form `logQ - logK`,
-- a tiny artificial least-squares solver example.
 
-It intentionally excludes:
 
-- experimental datasets,
-- real compound names,
-- project-specific coefficient matrices,
-- equilibrium-constant tables,
-- Excel input/output workflows,
-- batch processing scripts,
-- figure/table generation scripts,
-- tuned solver settings used for real manuscript calculations.
+## Model Formulation
 
-## Mathematical Core
-
-For initial concentration vector `C0`, coefficient matrix `V`, and reaction extent vector `xi`, concentrations are updated as:
+For initial concentration vector `C0`, stoichiometric coefficient matrix `V`, and reaction extent vector `xi`, the predicted concentration vector is calculated as:
 
 ```python
 C = C0 + V @ xi
 ```
 
-The logarithmic reaction quotient is calculated as:
+The logarithmic reaction quotient is evaluated from the current concentration vector:
 
 ```python
 logQ = V.T @ np.log(C)
 ```
 
-The analytic Jacobian with respect to `xi` is:
+The thermodynamic residual used for least-squares optimization is:
+
+```python
+residual = logQ - logK
+```
+
+where `logK` is the logarithmic form of the apparent equilibrium constants.
+
+To improve numerical efficiency, the analytical Jacobian of the residual vector with respect to the reaction extent vector is supplied:
 
 ```python
 J = V.T @ (V / C[:, None])
 ```
 
-The least-squares residual is:
-
-```python
-residual = logQ(C0 + V @ xi) - logK
-```
-
 These expressions are implemented in [calculation_core.py](calculation_core.py).
 
-## Least-Squares Demonstration
+## Least-Squares Example
 
-The file includes a small artificial example showing how the residual and Jacobian callbacks can be passed to SciPy:
+The repository includes a small artificial example showing how the residual and analytical Jacobian can be passed to `scipy.optimize.least_squares`:
 
 ```python
 result = least_squares(
@@ -63,7 +48,16 @@ result = least_squares(
 )
 ```
 
-The demonstration uses generic arrays only. It is provided to verify the calculation structure, not to reproduce the manuscript dataset.
+The example uses generic arrays only. It is intended to demonstrate the reaction-extent-guided residual minimization procedure.
+
+## Included
+
+- concentration update from reaction extent,
+- logarithmic reaction quotient calculation,
+- thermodynamic residual construction,
+- analytical Jacobian construction,
+- a toy nonlinear least-squares example.
+
 
 ## Quick Check
 
@@ -74,7 +68,7 @@ pip install -r requirements.txt
 python calculation_core.py
 ```
 
-Expected output includes a successful toy least-squares solve:
+Expected output includes:
 
 ```text
 solver success = True
@@ -83,19 +77,12 @@ solver xi = [0.72828584]
 
 Small numerical differences may occur across Python, NumPy, or SciPy versions.
 
-## Files
 
-```text
-calculation_core.py   # numerical core and artificial least-squares example
-requirements.txt      # minimal Python dependencies
-CODE_AVAILABILITY.md  # code/data availability statement for manuscript use
-.gitignore            # excludes generated files and private data formats
-```
 
 ## Citation
 
-If this repository is referenced during review or after publication, please cite the associated manuscript. The bibliographic details can be added here after acceptance.
+If this repository is referenced, please cite the associated EquiPredict-B manuscript after publication.
 
-## License And Reuse
+## Reuse
 
-No open-source license is included in this preview repository. The code is provided for method inspection and academic review. For reuse beyond viewing the repository, please contact the authors.
+The code is provided to describe the calculation strategy. For reuse beyond viewing this repository, please contact the authors.

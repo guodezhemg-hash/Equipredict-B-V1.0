@@ -6,9 +6,6 @@ This file intentionally shows only the central numerical expressions:
     C = C0 + V @ xi
     logQ = V.T @ log(C)
     J = V.T @ (V / C[:, None])
-
-It does not include data loading, batch processing, model construction,
-real-data solver tuning, file export, or any project-specific chemistry data.
 """
 
 from __future__ import annotations

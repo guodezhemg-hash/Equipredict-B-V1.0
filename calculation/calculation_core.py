@@ -1,7 +1,7 @@
 """
-Calculation core preview for a reaction-extent equilibrium calculation.
+Minimal implementation of the reaction-extent equilibrium solver
 
-This file intentionally shows only the central numerical expressions:
+This file intentionally shows the central numerical expressions:
 
     C = C0 + V @ xi
     logQ = V.T @ log(C)

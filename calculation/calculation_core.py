@@ -6,6 +6,11 @@ This file intentionally shows the central numerical expressions:
     C = C0 + V @ xi
     logQ = V.T @ log(C)
     J = V.T @ (V / C[:, None])
+
+For demonstration purposes, this file also includes a small example
+based on the reversible reaction:
+
+    A + B ⇌ C
 """
 
 from __future__ import annotations
